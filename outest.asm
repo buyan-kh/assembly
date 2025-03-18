@@ -1,237 +1,223 @@
-.text
-main:
-addi $s0, $zero, 0 #A pointer
-addi $s1, $zero, 0 #B pointer
-addi $s2, $zero, 0 #A/B_4_x_$ offset
-addi $s3, $zero, 0 #parse_loop iterator, int j = 0;
-addi $s4, $zero, 0 #C pointer
+# Lab 6 Exercise 1 (Chang Liu)
+# Student ID even => arithmetic
 
-addi $sp, $sp, -20 #make room for 5 ints
+# ASCII for reference
+# | char | dec | hex | bin    |
+# | 0    | 48  | 30  | 110000 |
+# | 1    | 49  | 31  | 110001 |
+# ...
+# | 9    | 57  | 39  | 111001 |
+#
+# Arithmetic
+# '0' - 48
 
-parse_loop:
-
-addi $t0, $zero, 0 #load_A iterator, int y = 0;
-addi $s2, $zero, 0 #A/B_4_x_4 pointer reset
-#------A
-load_A:
-la $t1, A
-add $t1, $t1, $s0
-
-la $t6, A_4_x_4
-add $t6, $t6, $s2
-
-lw $t2, 0($t1)
-lw $t3, 4($t1)
-lw $t4, 8($t1)
-lw $t5, 12($t1)
-
-sw $t2, 0($t6)
-sw $t3, 4($t6)
-sw $t4, 8($t6)
-sw $t5, 12($t6)
-
-addi $t0, $t0, 1
-addi $s2, $s2, 16
-addi $s0, $s0, 32 
-
-blt $t0, 4, load_A
-#-----A
-
-addi $t0, $zero, 0 #load_B iterator, int y = 0;
-addi $s2, $zero, 0 #A/B_4_x_4 pointer reset
-
-#------B
-load_B:
-la $t1, B
-add $t1, $t1, $s1
-
-la $t6, B_4_x_4
-add $t6, $t6, $s2
-
-lw $t2, 0($t1)
-lw $t3, 4($t1)
-lw $t4, 8($t1)
-lw $t5, 12($t1)
-
-sw $t2, 0($t6)
-sw $t3, 4($t6)
-sw $t4, 8($t6)
-sw $t5, 12($t6)
-
-addi $t0, $t0, 1
-addi $s2, $s2, 16
-addi $s1, $s1, 32 
-
-blt $t0, 4, load_B
-#-----B
-#-----STACK-----#
-sw $s0, 0($sp)
-sw $s1, 4($sp)
-sw $s2, 8($sp)
-sw $s3, 12($sp)
-sw $s4, 16($sp)
-#-----STACK-----#
-#----------MATRIX_MULT
-matrix_mult:
-addi $s0, $zero, 0 #int i = 0; C offset
-addi $s1, $zero, 0 #int j = 0; A offset
-addi $s2, $zero, 0 #int k = 0; B offset
-addi $s3, $zero, 0 #int t = 0; outside_loop counter
-addi $s5, $zero, 0 #B address shift
-
-outside_loop:
-la $t0, C_4_x_4
-add $t0, $t0, $s0 #add C ofFset
-
-addi $s4, $zero, 0 #int x = 0; inside_loop counter
-#-----------------------
-inside_loop:
-lw $t1, ($t0) #C[i]
-
-la $t2, A_4_x_4
-add $t2, $t2, $s1 #add offset
-lw $t3, ($t2)
-
-la $t5, B_4_x_4
-add $t5, $t5, $s5 #shift to correct column
-add $t5, $t5, $s2
-lw $t4, ($t5)
-
-mul $t3, $t3, $t4
-add $t1, $t1, $t3
-
-sw $t1, ($t0)
-
-addi $s1, $s1, 4 #A offset
-addi $s2, $s2, 16 #B offset
-addi $s4, $s4, 1 #insdide loop x++
-
-blt $s4, 4, inside_loop
-#----------------------
-addi $s0, $s0, 4 #next C element
-addi $s1, $zero, 0 #reset A offset
-addi $s2, $zero, 0 #reset B offset
-addi $s3, $s3, 1 #t++
-addi $s5, $s5, 4 #next B colum
-
-blt $s3, 4, outside_loop
-
-addi $s1, $zero, 16
-addi $s2, $s2, -16
-blt $s3, 8, outside_loop
-
-addi $s1, $zero, 32
-addi $s2, $s2, -16
-blt $s3, 12, outside_loop
-
-addi $s1, $zero, 48
-addi $s2, $s2, -16
-blt $s3, 16, outside_loop
-#----------MATRIX_MULT
-#-----STACK-----#
-lw $s0, 0($sp)
-lw $s1, 4($sp)
-lw $s2, 8($sp)
-lw $s3, 12($sp)
-lw $s4, 16($sp)
-#-----STACK-----#
-#-----C[]-----#
-addi $t0, $zero, 0 #ADD_MATRIX iterator
-addi $t1, $zero, 0 #C_4_x_4 pointer
-ADD_MATRIX:
-la $t2, C
-add $t2, $t2, $s4
-
-la $t3, C_4_x_4
-add $t3, $t3, $t1
-
-lw $t4, 0($t3)
-lw $t5, 4($t3)
-lw $t6, 8($t3)
-lw $t7, 12($t3)
-
-sw $t4, 0($t2)
-sw $t5, 4($t2)
-sw $t6, 8($t2)
-sw $t7, 12($t2)
-
-addi $t0, $t0, 1 #i++
-addi $t1, $t1, 16
-addi $s4, $s4, 32
-
-blt $t0, 4, ADD_MATRIX
-#-----C[]-----#
-
-addi $s0, $zero, 16
-addi $s1, $zero, 128
-addi $s3, $s3, 1
-addi $s4, $zero, 0
-blt $s3, 2, parse_loop
-
-bgt $s3, 2, next1 
-jal zero
-
-next1:
-addi $s0, $zero, 0
-addi $s1, $zero, 16
-addi $s4, $zero, 16
-blt $s3, 3, parse_loop
-
-addi $s0, $zero, 16
-addi $s1, $zero, 144
-blt $s3, 4, parse_loop
-
-bgt $s3, 4, next2 
-jal zero
-
-next2:
-addi $s0, $zero, 128
-addi $s1, $zero, 0
-addi $s4, $zero, 128
-blt $s3, 5, parse_loop
-
-addi $s0, $zero, 144
-addi $s1, $zero, 128
-blt $s3, 6, parse_loop
-
-bgt $s3, 6, next3 
-jal zero
-
-next3:
-addi $s0, $zero, 128
-addi $s1, $zero, 16
-addi $s4, $zero, 144
-blt $s3, 7, parse_loop
-
-addi $s0, $zero, 144
-addi $s1, $zero, 144
-blt $s3, 8, parse_loop
-#----------------exit-----------------------#
-exit:
-li $v0, 10
-syscall
-#-------------------------------------------#
-#-----ZERO-C------#
-zero:
-
-addi $t0, $zero, 0 #iterator
-addi $t1, $zero, 0 #pointer
-zero_loop:
-la $t2, C_4_x_4
-add $t2, $t2, $t1
-
-sw $zero, ($t2)
-
-addi $t0, $t0, 1 #i++
-addi $t1, $t1, 4 #increment pointer
-blt $t0, 16, zero_loop
-jr $ra
-#------ZERO-C-----#
+# syscall reference
+# | service       | $v0 | parameters and/or outputs    |
+# | print integer | 1   | $a0: integer                 |
+# | print string  | 4   | $a0: string                  |
+# | read string   | 8   | $a0: buffer, $a1: max_length |
+# | read integer  | 5   | $v0: integer                 |
 
 .data
-C: .word 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-C_4_x_4: .space 64
-A_4_x_4: .space 64
-B_4_x_4: .space 64
-A: .word 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63
-B: .word 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63
+.align 2
+M1:  # identity matrix
+.word 1, 0, 0, 0, 0, 0, 0, 0
+.word 0, 1, 0, 0, 0, 0, 0, 0
+.word 0, 0, 1, 0, 0, 0, 0, 0
+.word 0, 0, 0, 1, 0, 0, 0, 0
+.word 0, 0, 0, 0, 1, 0, 0, 0
+.word 0, 0, 0, 0, 0, 1, 0, 0
+.word 0, 0, 0, 0, 0, 0, 1, 0
+.word 0, 0, 0, 0, 0, 0, 0, 1
+M2:  # some random matrix
+.word 1, 5, 4, 7, 2, 4, 8, 6
+.word 9, 3, 8, 4, 6, 2, 6, 5
+.word 0, 1, 2, 6, 5, 8, 5, 4
+.word 8, 3, 6, 8, 3, 8, 6, 6
+.word 8, 7, 7, 9, 3, 4, 6, 1
+.word 8, 5, 6, 3, 5, 6, 0, 1
+.word 1, 9, 8, 2, 5, 6, 8, 0
+.word 0, 1, 2, 6, 5, 7, 2, 9
+M3:
+.space 256
+prompt_row: .asciiz "Row "
+prompt_row2: .asciiz ": "
+newline: .asciiz "\n"
+space: .asciiz " "
+
+.text
+.globl main
+main:
+    # multiply
+    la $a0, M3
+    la $a1, M1
+    la $a2, M2
+    jal multiply_matrix
+
+    # print
+    la $a0, newline
+    jal _print_str
+
+    la $a0, M3
+    jal print_matrix
+
+    # exit
+    li $v0, 10
+    syscall
+
+# parameters:
+# $a0: (int) integer to print
+_print_int:
+    li $v0, 1
+    syscall
+    jr $ra
+
+# parameters:
+# $a0: (char *) null-terminated string to print
+_print_str:
+    li $v0, 4
+    syscall
+    jr $ra
+
+# parameters:
+# $a0: (int *) pointer to matrix
+print_matrix:
+    addiu $sp, $sp, -24
+    sw $ra, 0($sp)
+    sw $s0, 4($sp)
+    sw $s1, 8($sp)
+    sw $s2, 12($sp)
+    sw $s3, 16($sp)
+    sw $s4, 20($sp)
+
+    li $s0, 8
+    move $s2, $a0
+
+    print_matrix_loop:
+        la $a0, prompt_row
+        jal _print_str
+
+        # print row index
+        li $s1, 9
+        sub $s1, $s1, $s0
+        move $a0, $s1
+        jal _print_int
+
+        la $a0, prompt_row2
+        jal _print_str
+
+        # calculate array offset
+        addiu $t0, $s1, -1 # row 1 => offset 0
+        sll $t0, $t0, 5    # 8 words = 32 bytes = 2^5
+        addu $s3, $s2, $t0
+
+        # print first integer
+        lw $a0, 0($s3)
+        jal _print_int
+
+        # print rest with spaces
+        li $s4, 7
+        print_matrix_inner_loop:
+            la $a0, space
+            jal _print_str
+
+            addiu $s3, $s3, 4
+            lw $a0, 0($s3)
+            jal _print_int
+
+            addiu $s4, $s4, -1
+            bne $s4, $zero, print_matrix_inner_loop
+
+        # print newline
+        la $a0, newline
+        jal _print_str
+
+        addiu $s0, $s0, -1
+        bne $s0, $zero, print_matrix_loop
+
+    lw $s4, 20($sp)
+    lw $s3, 16($sp)
+    lw $s2, 12($sp)
+    lw $s1, 8($sp)
+    lw $s0, 4($sp)
+    lw $ra, 0($sp)
+    addiu $sp, $sp, 24
+
+    jr $ra
+
+# parameters:
+# $a0: (int *) pointer to result matrix
+# $a1: (int *) pointer to first matrix
+# $a2: (int *) pointer to second matrix
+multiply_matrix:
+    addiu $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $s2, 8($sp)
+
+    # pseudo-code
+    # for (int i = 0; i < 8; ++i) {
+    #   for (int j = 0; j < 8; ++j) {
+    #     for (int k = 0; k < 8; ++k) {
+    #       $a0[i][j] += $a1[i][k] * $a2[k][j];
+    #     }
+    #   }
+    # }
+    move $s0, $a0
+    move $s1, $a1
+    move $s2, $a2
+
+    li $t3, 8
+
+    multiply_matrix_loop1:
+        addiu $t3, $t3, -1
+        li $t4, 8
+
+        multiply_matrix_loop2:
+            addiu $t4, $t4, -1
+            li $t5, 8
+
+            multiply_matrix_loop3:
+                addiu $t5, $t5, -1
+
+                # one row: 4 * 8 = 32 bytes
+                # one element: 4 bytes
+
+                # load
+                sll $t6, $t3, 5
+                sll $t7, $t5, 2
+                addu $t1, $t6, $t7
+                addu $t1, $t1, $s1
+                lw $t1, 0($t1)
+
+                sll $t6, $t5, 5
+                sll $t7, $t4, 2
+                addu $t2, $t6, $t7
+                addu $t2, $t2, $s2
+                lw $t2, 0($t2)
+
+                # multiply
+                mul $t1, $t1, $t2
+
+                # add in place
+                sll $t6, $t3, 5
+                sll $t7, $t4, 2
+                addu $t0, $t6, $t7
+                addu $t0, $t0, $s0
+                lw $t2, 0($t0)
+
+                addu $t2, $t2, $t1
+                sw $t2, 0($t0)
+
+                bne $t5, $zero, multiply_matrix_loop3
+
+            bne $t4, $zero, multiply_matrix_loop2
+
+        bne $t3, $zero, multiply_matrix_loop1
+
+    lw $s2, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addiu $sp, $sp, 12
+
+    jr $ra
